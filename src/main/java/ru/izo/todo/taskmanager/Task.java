@@ -1,4 +1,4 @@
-package taskmanager;
+package ru.izo.todo.taskmanager;
 
 import java.time.LocalDate;
 import java.util.Objects;
@@ -86,13 +86,14 @@ public class Task {
 
     @Override
     public String toString() {
-        return "Task{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                ", description='" + description + '\'' +
-                ", status=" + status +
-                ", dateOfCreation=" + dateOfCreation +
-                '}';
+        return """
+            Task
+              id: %d
+              name: %s
+              description: %s
+              status: %s
+              created: %s
+            """.formatted(id, name, description, status, dateOfCreation);
     }
 
     public int getId() {

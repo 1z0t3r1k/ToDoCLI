@@ -1,13 +1,16 @@
-import taskmanager.Task;
-import taskmanager.service.TaskService;
-import taskmanager.storage.InMemoryTaskRepository;
+package ru.izo.todo;
+
+import ru.izo.todo.taskmanager.Task;
+import ru.izo.todo.taskmanager.TaskRepository;
+import ru.izo.todo.taskmanager.service.TaskService;
+import ru.izo.todo.taskmanager.storage.InMemoryTaskRepository;
 
 import java.time.LocalDate;
 import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) {
-        TaskService taskService = new TaskService(new InMemoryTaskRepository());
+        TaskService taskService = new TaskService((TaskRepository) new InMemoryTaskRepository());
         Scanner scanner = new Scanner(System.in);
 
         while (true) {
@@ -34,6 +37,19 @@ public class Main {
                     case "1" -> {
                         System.out.print("Enter task name: ");
                         String name = scanner.nextLine();
+
+                        if (taskService.existsByExactName(name)) {
+                            System.out.printf(
+                                    "Task with name <%s> already exists. Create anyway? (Y/N): ",
+                                    name
+                            );
+
+                            String answer = scanner.nextLine().trim().toUpperCase();
+                            if (!answer.equals("Y")) {
+                                System.out.println("Task creation cancelled");
+                                break;
+                            }
+                        }
 
                         System.out.print("Enter task description: ");
                         String description = scanner.nextLine();

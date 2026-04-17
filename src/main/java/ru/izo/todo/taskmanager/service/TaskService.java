@@ -1,7 +1,7 @@
-package taskmanager.service;
+package ru.izo.todo.taskmanager.service;
 
-import taskmanager.Task;
-import taskmanager.TaskRepository;
+import ru.izo.todo.taskmanager.Task;
+import ru.izo.todo.taskmanager.TaskRepository;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -15,13 +15,18 @@ public class TaskService {
     }
 
     public int createTask(String name, String description) {
-        Task task = new Task(nextId++, name, description);
+        Task task = new Task(nextId, name, description);
         repository.save(task);
+        nextId++;
         return task.getId();
     }
 
     public List<Task> getTasks() {
         return repository.findAll();
+    }
+
+    public int tasksSize() {
+        return this.getTasks().size();
     }
 
     public Task getTaskById(int id) {
@@ -67,5 +72,9 @@ public class TaskService {
 
     public List<Task> findBetweenDates(LocalDate startDate, LocalDate endDate) {
         return repository.findBetweenDates(startDate, endDate);
+    }
+
+    public boolean existsByExactName(String name) {
+        return repository.existsByExactName(name);
     }
 }
