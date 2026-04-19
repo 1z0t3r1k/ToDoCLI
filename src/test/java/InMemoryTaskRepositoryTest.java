@@ -1,10 +1,6 @@
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.EmptySource;
-import org.junit.jupiter.params.provider.NullSource;
-import org.junit.jupiter.params.provider.ValueSource;
+
 import ru.izo.todo.taskmanager.Task;
 import ru.izo.todo.taskmanager.storage.InMemoryTaskRepository;
 
@@ -14,15 +10,20 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class InMemoryTaskRepositoryTest {
+    private InMemoryTaskRepository taskRepository;
+
+    @BeforeEach
+    void setUp() {
+        taskRepository = new InMemoryTaskRepository();
+    }
+
     @Test
     public void saveShouldThrowWhenTaskIsNull() {
-        InMemoryTaskRepository taskRepository = new InMemoryTaskRepository();
         assertThrows(IllegalArgumentException.class, () -> taskRepository.save(null));
     }
 
     @Test
     public void saveShouldStoreTask() {
-        InMemoryTaskRepository taskRepository = new InMemoryTaskRepository();
         Task task = new Task(1, "Name", "Description");
 
         taskRepository.save(task);
@@ -32,13 +33,11 @@ public class InMemoryTaskRepositoryTest {
 
     @Test
     public void findByIdShouldThrowWhenTaskDoesNotExist() {
-        InMemoryTaskRepository taskRepository = new InMemoryTaskRepository();
         assertThrows(IllegalArgumentException.class, () -> taskRepository.findById(1));
     }
 
     @Test
     public void findByIdShouldReturnTaskAfterSave() {
-        InMemoryTaskRepository taskRepository = new InMemoryTaskRepository();
         Task task = new Task(1, "Name", "Description");
 
         taskRepository.save(task);
@@ -48,13 +47,11 @@ public class InMemoryTaskRepositoryTest {
 
     @Test
     public void deleteByIdShouldThrowWhenTaskDoesNotExist() {
-        InMemoryTaskRepository taskRepository = new InMemoryTaskRepository();
         assertThrows(IllegalArgumentException.class, () -> taskRepository.deleteById(1));
     }
 
     @Test
     public void deleteByIdShouldMakeTaskUnavailableById() {
-        InMemoryTaskRepository taskRepository = new InMemoryTaskRepository();
         Task task = new Task(1, "Name", "Description");
 
         taskRepository.save(task);
@@ -65,15 +62,12 @@ public class InMemoryTaskRepositoryTest {
 
     @Test
     public void findByStatusShouldThrowWhenStatusIsNull() {
-        InMemoryTaskRepository taskRepository = new InMemoryTaskRepository();
 
         assertThrows(IllegalArgumentException.class, () -> taskRepository.findByStatus(null));
     }
 
     @Test
     public void findByStatusShouldFilterTasksByStatus() {
-        InMemoryTaskRepository taskRepository = new InMemoryTaskRepository();
-
         Task task1 = new Task(1, "Name 1", "Description 1");
         Task task2 = new Task(2, "Name 2", "Description 2");
         Task task3 = new Task(3, "Name 3", "Description 3");
@@ -107,14 +101,11 @@ public class InMemoryTaskRepositoryTest {
 
     @Test
     public void findByNameShouldThrowWhenNameIsNull() {
-        InMemoryTaskRepository taskRepository = new InMemoryTaskRepository();
         assertThrows(IllegalArgumentException.class, () -> taskRepository.findByName(null));
     }
 
     @Test
     public void findByNameShouldFilterTasksByName() {
-        InMemoryTaskRepository taskRepository = new InMemoryTaskRepository();
-
         Task task1 = new Task(1, "Name 1", "Description 1");
         Task task2 = new Task(2, "Name 1", "Description 2");
         Task task3 = new Task(3, "Name 1", "Description 3");
@@ -142,8 +133,6 @@ public class InMemoryTaskRepositoryTest {
 
     @Test
     public void findByNameShouldReturnTasksContainingSearchText() {
-        InMemoryTaskRepository taskRepository = new InMemoryTaskRepository();
-
         Task task1 = new Task(1, "Learn Java", "Description 1");
         Task task2 = new Task(2, "Java Collections", "Description 2");
         Task task3 = new Task(3, "Spring Boot", "Description 3");
@@ -162,44 +151,33 @@ public class InMemoryTaskRepositoryTest {
 
     @Test
     public void findBetweenDatesShouldThrowWhenStartDateIsNull() {
-        InMemoryTaskRepository repository = new InMemoryTaskRepository();
-
-        assertThrows(IllegalArgumentException.class,
-                () -> repository.findBetweenDates(null, LocalDate.now()));
+        assertThrows(IllegalArgumentException.class, () -> taskRepository.findBetweenDates(null, LocalDate.now()));
     }
 
     @Test
     public void findBetweenDatesShouldThrowWhenEndDateIsNull() {
-        InMemoryTaskRepository repository = new InMemoryTaskRepository();
-
-        assertThrows(IllegalArgumentException.class,
-                () -> repository.findBetweenDates(LocalDate.now(), null));
+        assertThrows(IllegalArgumentException.class, () -> taskRepository.findBetweenDates(LocalDate.now(), null));
     }
 
     @Test
     public void findBetweenDatesShouldThrowWhenStartDateIsAfterEndDate() {
-        InMemoryTaskRepository repository = new InMemoryTaskRepository();
-
         LocalDate startDate = LocalDate.now().plusDays(1);
         LocalDate endDate = LocalDate.now();
 
-        assertThrows(IllegalArgumentException.class,
-                () -> repository.findBetweenDates(startDate, endDate));
+        assertThrows(IllegalArgumentException.class, () -> taskRepository.findBetweenDates(startDate, endDate));
     }
 
     @Test
     public void findBetweenDatesShouldReturnTasksInsideInclusiveRange() {
-        InMemoryTaskRepository repository = new InMemoryTaskRepository();
-
         Task task1 = new Task(1, "Task 1", "Description 1");
         Task task2 = new Task(2, "Task 2", "Description 2");
 
-        repository.save(task1);
-        repository.save(task2);
+        taskRepository.save(task1);
+        taskRepository.save(task2);
 
         LocalDate today = LocalDate.now();
 
-        List<Task> filtered = repository.findBetweenDates(today, today);
+        List<Task> filtered = taskRepository.findBetweenDates(today, today);
 
         assertEquals(2, filtered.size());
         assertTrue(filtered.contains(task1));
@@ -208,61 +186,48 @@ public class InMemoryTaskRepositoryTest {
 
     @Test
     public void findBetweenDatesShouldReturnEmptyListWhenNoTasksMatch() {
-        InMemoryTaskRepository repository = new InMemoryTaskRepository();
-
         Task task = new Task(1, "Task 1", "Description 1");
-        repository.save(task);
+        taskRepository.save(task);
 
         LocalDate futureDate = LocalDate.now().plusDays(10);
 
-        List<Task> filtered = repository.findBetweenDates(futureDate, futureDate);
+        List<Task> filtered = taskRepository.findBetweenDates(futureDate, futureDate);
 
         assertTrue(filtered.isEmpty());
     }
 
     @Test
     public void existsByExactNameShouldThrowWhenNameIsNull() {
-        InMemoryTaskRepository repository = new InMemoryTaskRepository();
-
-        assertThrows(IllegalArgumentException.class,
-                () -> repository.existsByExactName(null));
+        assertThrows(IllegalArgumentException.class, () -> taskRepository.existsByExactName(null));
     }
 
     @Test
     public void existsByExactNameShouldReturnFalseWhenNameIsInvalid() {
-        InMemoryTaskRepository repository = new InMemoryTaskRepository();
-
-        assertFalse(repository.existsByExactName(""));
-        assertFalse(repository.existsByExactName("   "));
+        assertFalse(taskRepository.existsByExactName(""));
+        assertFalse(taskRepository.existsByExactName("   "));
     }
 
     @Test
     public void existsByExactNameShouldReturnTrueWhenExactNameExists() {
-        InMemoryTaskRepository repository = new InMemoryTaskRepository();
-
         Task task = new Task(1, "Learn Java", "Description");
-        repository.save(task);
+        taskRepository.save(task);
 
-        assertTrue(repository.existsByExactName("Learn Java"));
+        assertTrue(taskRepository.existsByExactName("Learn Java"));
     }
 
     @Test
     public void existsByExactNameShouldReturnFalseWhenOnlyPartialMatchExists() {
-        InMemoryTaskRepository repository = new InMemoryTaskRepository();
-
         Task task = new Task(1, "Learn Java", "Description");
-        repository.save(task);
+        taskRepository.save(task);
 
-        assertFalse(repository.existsByExactName("Java"));
+        assertFalse(taskRepository.existsByExactName("Java"));
     }
 
     @Test
     public void existsByExactNameShouldReturnFalseWhenNameDoesNotExist() {
-        InMemoryTaskRepository repository = new InMemoryTaskRepository();
-
         Task task = new Task(1, "Learn Java", "Description");
-        repository.save(task);
+        taskRepository.save(task);
 
-        assertFalse(repository.existsByExactName("Spring"));
+        assertFalse(taskRepository.existsByExactName("Spring"));
     }
 }

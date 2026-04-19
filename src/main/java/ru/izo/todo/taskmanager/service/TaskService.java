@@ -25,7 +25,7 @@ public class TaskService {
         return repository.findAll();
     }
 
-    public int tasksSize() {
+    public int getTasksSize() {
         return this.getTasks().size();
     }
 

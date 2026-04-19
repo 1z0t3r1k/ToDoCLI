@@ -43,6 +43,19 @@ public class TaskTest {
     }
 
     @Test
+    public void markInProgressShouldThrowWhenTaskIsAlreadyDone() {
+        Task task = createValidTask();
+        task.markInProgress();
+        assertThrows(IllegalStateException.class, task::markInProgress);
+    }
+
+    @Test
+    public void markUndoneShouldThrowWhenTaskIsAlreadyDone() {
+        Task task = createValidTask();
+        assertThrows(IllegalStateException.class, task::markUndone);
+    }
+
+    @Test
     public void newTaskShouldHaveUndoneStatus() {
         Task task = createValidTask();
         assertEquals(Task.TaskStatus.UNDONE, task.getStatus());
