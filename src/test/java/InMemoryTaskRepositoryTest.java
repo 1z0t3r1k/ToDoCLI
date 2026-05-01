@@ -24,7 +24,7 @@ public class InMemoryTaskRepositoryTest {
 
     @Test
     public void saveShouldStoreTask() {
-        Task task = new Task(1, "Name", "Description");
+        Task task = new Task(1, "Name", "Description", null);
 
         taskRepository.save(task);
 
@@ -38,7 +38,7 @@ public class InMemoryTaskRepositoryTest {
 
     @Test
     public void findByIdShouldReturnTaskAfterSave() {
-        Task task = new Task(1, "Name", "Description");
+        Task task = new Task(1, "Name", "Description", null);
 
         taskRepository.save(task);
 
@@ -52,7 +52,7 @@ public class InMemoryTaskRepositoryTest {
 
     @Test
     public void deleteByIdShouldMakeTaskUnavailableById() {
-        Task task = new Task(1, "Name", "Description");
+        Task task = new Task(1, "Name", "Description", null);
 
         taskRepository.save(task);
         taskRepository.deleteById(1);
@@ -68,12 +68,12 @@ public class InMemoryTaskRepositoryTest {
 
     @Test
     public void findByStatusShouldFilterTasksByStatus() {
-        Task task1 = new Task(1, "Name 1", "Description 1");
-        Task task2 = new Task(2, "Name 2", "Description 2");
-        Task task3 = new Task(3, "Name 3", "Description 3");
-        Task task4 = new Task(4, "Name 4", "Description 4");
-        Task task5 = new Task(5, "Name 5", "Description 5");
-        Task task6 = new Task(6, "Name 6", "Description 6");
+        Task task1 = new Task(1, "Name 1", "Description 1", null);
+        Task task2 = new Task(2, "Name 2", "Description 2", null);
+        Task task3 = new Task(3, "Name 3", "Description 3", null);
+        Task task4 = new Task(4, "Name 4", "Description 4", null);
+        Task task5 = new Task(5, "Name 5", "Description 5", null);
+        Task task6 = new Task(6, "Name 6", "Description 6", null);
 
         taskRepository.save(task1);
         taskRepository.save(task2);
@@ -106,12 +106,12 @@ public class InMemoryTaskRepositoryTest {
 
     @Test
     public void findByNameShouldFilterTasksByName() {
-        Task task1 = new Task(1, "Name 1", "Description 1");
-        Task task2 = new Task(2, "Name 1", "Description 2");
-        Task task3 = new Task(3, "Name 1", "Description 3");
-        Task task4 = new Task(4, "Name 2", "Description 4");
-        Task task5 = new Task(5, "Name 2", "Description 5");
-        Task task6 = new Task(6, "Name 3", "Description 6");
+        Task task1 = new Task(1, "Name 1", "Description 1", null);
+        Task task2 = new Task(2, "Name 1", "Description 2", null);
+        Task task3 = new Task(3, "Name 1", "Description 3", null);
+        Task task4 = new Task(4, "Name 2", "Description 4", null);
+        Task task5 = new Task(5, "Name 2", "Description 5", null);
+        Task task6 = new Task(6, "Name 3", "Description 6", null);
 
         taskRepository.save(task1);
         taskRepository.save(task2);
@@ -133,9 +133,9 @@ public class InMemoryTaskRepositoryTest {
 
     @Test
     public void findByNameShouldReturnTasksContainingSearchText() {
-        Task task1 = new Task(1, "Learn Java", "Description 1");
-        Task task2 = new Task(2, "Java Collections", "Description 2");
-        Task task3 = new Task(3, "Spring Boot", "Description 3");
+        Task task1 = new Task(1, "Learn Java", "Description 1", null);
+        Task task2 = new Task(2, "Java Collections", "Description 2", null);
+        Task task3 = new Task(3, "Spring Boot", "Description 3", null);
 
         taskRepository.save(task1);
         taskRepository.save(task2);
@@ -169,8 +169,8 @@ public class InMemoryTaskRepositoryTest {
 
     @Test
     public void findBetweenDatesShouldReturnTasksInsideInclusiveRange() {
-        Task task1 = new Task(1, "Task 1", "Description 1");
-        Task task2 = new Task(2, "Task 2", "Description 2");
+        Task task1 = new Task(1, "Task 1", "Description 1", null);
+        Task task2 = new Task(2, "Task 2", "Description 2", null);
 
         taskRepository.save(task1);
         taskRepository.save(task2);
@@ -186,7 +186,7 @@ public class InMemoryTaskRepositoryTest {
 
     @Test
     public void findBetweenDatesShouldReturnEmptyListWhenNoTasksMatch() {
-        Task task = new Task(1, "Task 1", "Description 1");
+        Task task = new Task(1, "Task 1", "Description 1", null);
         taskRepository.save(task);
 
         LocalDate futureDate = LocalDate.now().plusDays(10);
@@ -209,7 +209,7 @@ public class InMemoryTaskRepositoryTest {
 
     @Test
     public void existsByExactNameShouldReturnTrueWhenExactNameExists() {
-        Task task = new Task(1, "Learn Java", "Description");
+        Task task = new Task(1, "Learn Java", "Description", null);
         taskRepository.save(task);
 
         assertTrue(taskRepository.existsByExactName("Learn Java"));
@@ -217,7 +217,7 @@ public class InMemoryTaskRepositoryTest {
 
     @Test
     public void existsByExactNameShouldReturnFalseWhenOnlyPartialMatchExists() {
-        Task task = new Task(1, "Learn Java", "Description");
+        Task task = new Task(1, "Learn Java", "Description", null);
         taskRepository.save(task);
 
         assertFalse(taskRepository.existsByExactName("Java"));
@@ -225,7 +225,7 @@ public class InMemoryTaskRepositoryTest {
 
     @Test
     public void existsByExactNameShouldReturnFalseWhenNameDoesNotExist() {
-        Task task = new Task(1, "Learn Java", "Description");
+        Task task = new Task(1, "Learn Java", "Description", null);
         taskRepository.save(task);
 
         assertFalse(taskRepository.existsByExactName("Spring"));

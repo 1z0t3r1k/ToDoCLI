@@ -1,29 +1,70 @@
 package ru.izo.todo.taskmanager.storage;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import ru.izo.todo.taskmanager.Task;
 import ru.izo.todo.taskmanager.TaskRepository;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-
-public class InMemoryTaskRepository implements TaskRepository {
+public class FileTaskRepository implements TaskRepository {
     private final Map<Integer, Task> tasks = new HashMap<>();
+    private final ObjectMapper objectMapper = new ObjectMapper()
+            .registerModule(new JavaTimeModule())
+            .disable(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+    private final Path filePath;
 
-    @Override
-    public void save(Task task) {
-        if (task == null) {
-            throw new IllegalArgumentException("Task cannot be null");
-        }
-        tasks.put(task.getId(), task);
+    public FileTaskRepository(Path filePath) {
+        this.filePath = filePath;
+        loadFromFile();
     }
 
-    @Override
-    public List<Task> findAll() {
-        return new ArrayList<>(tasks.values());
+    private void loadFromFile() {
+        if (Files.notExists(filePath)) {
+            return;
+        }
+
+        try {
+            if (Files.size(filePath) == 0) {
+                return;
+            }
+
+            List<Task> loadedTasks = objectMapper.readValue(
+                    filePath.toFile(),
+                    new TypeReference<List<Task>>() {
+                    }
+            );
+
+            tasks.clear();
+
+            for (Task task : loadedTasks) {
+                tasks.put(task.getId(), task);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void writeToFile() {
+        try {
+            Path parent = filePath.getParent();
+            if (parent != null) {
+                Files.createDirectories(parent);
+            }
+
+            objectMapper.writerWithDefaultPrettyPrinter()
+                    .writeValue(filePath.toFile(), tasks.values());
+        } catch (IOException e) {
+            throw new IllegalStateException("Failed to write tasks to file", e);
+        }
     }
 
     private Task validateTask(Task task, int id) {
@@ -34,14 +75,33 @@ public class InMemoryTaskRepository implements TaskRepository {
     }
 
     @Override
-    public Task findById(int id) {
-        return validateTask(tasks.get(id), id);
+    public void save(Task task) {
+        if (task == null) {
+            throw new IllegalArgumentException("Task cannot be null");
+        }
+        tasks.put(task.getId(), task);
+        writeToFile();
     }
 
     @Override
     public void deleteById(int id) {
         validateTask(tasks.get(id), id);
         tasks.remove(id);
+        writeToFile();
+    }
+
+    @Override
+    public Task findById(int id) {
+        Task task = tasks.get(id);
+        if (task == null) {
+            throw new IllegalArgumentException("There is no task with id: " + id);
+        }
+        return task;
+    }
+
+    @Override
+    public List<Task> findAll() {
+        return new ArrayList<>(tasks.values());
     }
 
     @Override
@@ -65,7 +125,7 @@ public class InMemoryTaskRepository implements TaskRepository {
         }
 
         return tasks.values().stream()
-                .filter(task -> task.getName().contains(name))
+                .filter(task -> task.getName().trim().toLowerCase().contains(name.trim().toLowerCase()))
                 .toList();
     }
 

@@ -8,6 +8,11 @@ import ru.izo.todo.taskmanager.Task;
 import ru.izo.todo.taskmanager.service.TaskService;
 import ru.izo.todo.taskmanager.storage.InMemoryTaskRepository;
 
+import java.time.Clock;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TaskServiceTest {
@@ -25,7 +30,7 @@ public class TaskServiceTest {
     @ValueSource(strings = {" ", "   "})
     public void createTaskShouldThrowWhenNameIsInvalid(String invalidName) {
         assertThrows(IllegalArgumentException.class,
-                () -> taskService.createTask(invalidName, "Description 1"));
+                () -> taskService.createTask(invalidName, "Description 1", null));
     }
 
     @ParameterizedTest
@@ -34,7 +39,7 @@ public class TaskServiceTest {
     @ValueSource(strings = {" ", "   "})
     public void createTaskShouldThrowWhenDescriptionIsInvalid(String invalidDescription) {
         assertThrows(IllegalArgumentException.class,
-                () -> taskService.createTask("Name", invalidDescription));
+                () -> taskService.createTask("Name", invalidDescription, null));
     }
 
     @ParameterizedTest
@@ -42,11 +47,11 @@ public class TaskServiceTest {
     @EmptySource
     @ValueSource(strings = {" ", "   "})
     public void createTaskShouldNotIncrementIdAfterFailedCreation(String invalidName) {
-        taskService.createTask("Name 1", "Description 1");
+        taskService.createTask("Name 1", "Description 1", null);
         int nextTaskId = taskService.getTasks().getFirst().getId() + 1;
         assertThrows(IllegalArgumentException.class,
-                () -> taskService.createTask(invalidName, "Description 3"));
-        taskService.createTask("Name 2", "Description 2");
+                () -> taskService.createTask(invalidName, "Description 3", null));
+        taskService.createTask("Name 2", "Description 2, null", null);
 
         assertEquals(nextTaskId, taskService.findByName("Name 2").getFirst().getId());
     }
@@ -58,9 +63,9 @@ public class TaskServiceTest {
 
     @Test
     public void deleteTaskByIdShouldRemoveOnlyTaskWithGivenId() {
-        int id1 = taskService.createTask("Name 1", "Description 1");
-        int id2 = taskService.createTask("Name 2", "Description 2");
-        int id3 = taskService.createTask("Name 3", "Description 3");
+        int id1 = taskService.createTask("Name 1", "Description 1", null);
+        int id2 = taskService.createTask("Name 2", "Description 2", null);
+        int id3 = taskService.createTask("Name 3", "Description 3", null);
 
         taskService.deleteTaskById(id1);
 
@@ -77,7 +82,7 @@ public class TaskServiceTest {
 
     @Test
     public void renameTaskShouldRenameTaskWithGivenId() {
-        int id = taskService.createTask("Name 1", "Description 1");
+        int id = taskService.createTask("Name 1", "Description 1", null);
         String newName = "New name";
         taskService.renameTask(id, newName);
         assertEquals(newName, taskService.getTaskById(id).getName());
@@ -89,16 +94,18 @@ public class TaskServiceTest {
     }
 
     @Test
-    public void changeDescriptionShouldRenameTaskWithGivenId() {
-        int id = taskService.createTask("Name 1", "Description 1");
-        String newDescription = "New name";
+    public void changeDescriptionShouldChangeDescriptionWithGivenId() {
+        int id = taskService.createTask("Name 1", "Description 1", null);
+        String newDescription = "New description";
+
         taskService.changeTaskDescription(id, newDescription);
+
         assertEquals(newDescription, taskService.getTaskById(id).getDescription());
     }
 
     @Test
     public void markTaskDoneShouldSetDoneStatus() {
-        int id = taskService.createTask("Name 1", "Description 1");
+        int id = taskService.createTask("Name 1", "Description 1", null);
 
         taskService.markTaskDone(id);
 
@@ -107,7 +114,7 @@ public class TaskServiceTest {
 
     @Test
     public void markTaskInProgressShouldSetInProgressStatus() {
-        int id = taskService.createTask("Name 1", "Description 1");
+        int id = taskService.createTask("Name 1", "Description 1", null);
 
         taskService.markTaskInProgress(id);
 
@@ -116,7 +123,7 @@ public class TaskServiceTest {
 
     @Test
     public void markTaskUndoneShouldSetUndoneStatus() {
-        int id = taskService.createTask("Name 1", "Description 1");
+        int id = taskService.createTask("Name 1", "Description 1", null);
         taskService.markTaskDone(id);
 
         taskService.markTaskUndone(id);
@@ -137,5 +144,87 @@ public class TaskServiceTest {
     @Test
     public void markTaskUndoneShouldThrowWhenTaskDoesNotExist() {
         assertThrows(IllegalArgumentException.class, () -> taskService.markTaskUndone(999));
+    }
+
+    @Test
+    public void createTaskShouldCreateTaskWithDeadline() {
+        LocalDate deadline = LocalDate.now().plusDays(3);
+
+        int id = taskService.createTask("Name", "Description", deadline);
+
+        Task task = taskService.getTaskById(id);
+
+        assertEquals(deadline, task.getDeadline());
+    }
+
+    @Test
+    public void createTaskShouldAllowNullDeadline() {
+        int id = taskService.createTask("Name", "Description", null);
+
+        Task task = taskService.getTaskById(id);
+
+        assertNull(task.getDeadline());
+    }
+
+    @Test
+    public void createTaskShouldThrowWhenDeadlineIsInPast() {
+        LocalDate pastDeadline = LocalDate.now().minusDays(1);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> taskService.createTask("Name", "Description", pastDeadline));
+    }
+
+    @Test
+    public void changeDeadlineShouldChangeTaskDeadline() {
+        int id = taskService.createTask("Name", "Description", null);
+        LocalDate deadline = LocalDate.now().plusDays(5);
+
+        taskService.changeDeadline(id, deadline);
+
+        assertEquals(deadline, taskService.getTaskById(id).getDeadline());
+    }
+
+    @Test
+    public void changeDeadlineShouldAllowNullDeadline() {
+        int id = taskService.createTask("Name", "Description", LocalDate.now().plusDays(5));
+
+        taskService.changeDeadline(id, null);
+
+        assertNull(taskService.getTaskById(id).getDeadline());
+    }
+
+    @Test
+    public void changeDeadlineShouldThrowWhenDeadlineIsInPast() {
+        int id = taskService.createTask("Name", "Description", null);
+        LocalDate pastDeadline = LocalDate.now().minusDays(1);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> taskService.changeDeadline(id, pastDeadline));
+    }
+
+    @Test
+    public void changeDeadlineShouldThrowWhenTaskDoesNotExist() {
+        LocalDate deadline = LocalDate.now().plusDays(3);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> taskService.changeDeadline(999, deadline));
+    }
+
+    @Test
+    public void findTasksForTodayShouldReturnTasksWithTodayDeadline() {
+        LocalDate today = LocalDate.now();
+
+        int id1 = taskService.createTask("Task 1", "Description 1", today);
+        int id2 = taskService.createTask("Task 2", "Description 2", today);
+        int id3 = taskService.createTask("Task 3", "Description 3", today.plusDays(1));
+        int id4 = taskService.createTask("Task 4", "Description 4", null);
+
+        List<Task> result = taskService.findTasksForToday();
+
+        assertEquals(2, result.size());
+        assertTrue(result.contains(taskService.getTaskById(id1)));
+        assertTrue(result.contains(taskService.getTaskById(id2)));
+        assertFalse(result.contains(taskService.getTaskById(id3)));
+        assertFalse(result.contains(taskService.getTaskById(id4)));
     }
 }
