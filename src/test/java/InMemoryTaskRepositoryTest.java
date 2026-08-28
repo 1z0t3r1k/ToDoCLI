@@ -82,11 +82,16 @@ public class InMemoryTaskRepositoryTest {
         taskRepository.save(task5);
         taskRepository.save(task6);
 
-        taskRepository.findById(1).markDone();
-        taskRepository.findById(2).markInProgress();
-        taskRepository.findById(3).markInProgress();
-        taskRepository.findById(4).markInProgress();
-        taskRepository.findById(5).markDone();
+        task1.markDone();
+        task2.markInProgress();
+        task3.markInProgress();
+        task4.markInProgress();
+        task5.markDone();
+        taskRepository.save(task1);
+        taskRepository.save(task2);
+        taskRepository.save(task3);
+        taskRepository.save(task4);
+        taskRepository.save(task5);
 
         List<Task> filtered = taskRepository.findByStatus(Task.TaskStatus.IN_PROGRESS);
 

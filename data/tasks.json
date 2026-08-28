@@ -1,0 +1,12 @@
+[ {
+  "id" : 1,
+  "name" : "Do Homework",
+  "description" : "Math",
+  "status" : "UNDONE",
+  "dateOfCreation" : "2026-08-28",
+  "deadline" : null,
+  "priority" : "URGENT",
+  "tags" : [ "university;linalg" ],
+  "archived" : false,
+  "completedAt" : null
+} ]

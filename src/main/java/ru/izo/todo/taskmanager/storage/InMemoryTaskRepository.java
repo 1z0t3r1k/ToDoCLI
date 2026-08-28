@@ -5,25 +5,26 @@ import ru.izo.todo.taskmanager.TaskRepository;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.List;
 import java.util.Map;
 
 
 public class InMemoryTaskRepository implements TaskRepository {
-    private final Map<Integer, Task> tasks = new HashMap<>();
+    private final Map<Integer, Task> tasks = new LinkedHashMap<>();
 
     @Override
     public void save(Task task) {
         if (task == null) {
             throw new IllegalArgumentException("Task cannot be null");
         }
-        tasks.put(task.getId(), task);
+        tasks.put(task.getId(), new Task(task));
     }
 
     @Override
     public List<Task> findAll() {
-        return new ArrayList<>(tasks.values());
+        return tasks.values().stream().map(Task::new).toList();
     }
 
     private Task validateTask(Task task, int id) {
@@ -35,7 +36,7 @@ public class InMemoryTaskRepository implements TaskRepository {
 
     @Override
     public Task findById(int id) {
-        return validateTask(tasks.get(id), id);
+        return new Task(validateTask(tasks.get(id), id));
     }
 
     @Override
@@ -52,7 +53,7 @@ public class InMemoryTaskRepository implements TaskRepository {
 
         return tasks.values().stream()
                 .filter(task -> task.getStatus() == taskStatus)
-                .toList();
+                .map(Task::new).toList();
     }
 
     @Override
@@ -65,8 +66,9 @@ public class InMemoryTaskRepository implements TaskRepository {
         }
 
         return tasks.values().stream()
-                .filter(task -> task.getName().contains(name))
-                .toList();
+                .filter(task -> task.getName().toLowerCase(Locale.ROOT)
+                        .contains(name.trim().toLowerCase(Locale.ROOT)))
+                .map(Task::new).toList();
     }
 
     @Override
@@ -82,7 +84,7 @@ public class InMemoryTaskRepository implements TaskRepository {
                 .filter(task ->
                         !task.getDateOfCreation().isBefore(startDate)
                                 && !task.getDateOfCreation().isAfter(endDate))
-                .toList();
+                .map(Task::new).toList();
     }
 
     @Override
@@ -119,7 +121,7 @@ public class InMemoryTaskRepository implements TaskRepository {
                 .filter(task -> task.getDeadline() != null)
                 .filter(task -> task.getDeadline().isBefore(today))
                 .filter(task -> task.getStatus() != Task.TaskStatus.DONE)
-                .toList();
+                .map(Task::new).toList();
     }
 
     @Override
@@ -131,6 +133,6 @@ public class InMemoryTaskRepository implements TaskRepository {
         return tasks.values().stream()
                 .filter(task -> deadline.equals(task.getDeadline()))
                 .filter(task -> task.getStatus() != Task.TaskStatus.DONE)
-                .toList();
+                .map(Task::new).toList();
     }
 }
