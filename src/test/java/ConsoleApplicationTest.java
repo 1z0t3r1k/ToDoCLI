@@ -24,7 +24,7 @@ class ConsoleApplicationTest {
                 Build an executable jar
                 2026-06-20
                 URGENT
-                java, portfolio
+                java, release
                 2
                 7
                 1
@@ -48,6 +48,7 @@ class ConsoleApplicationTest {
 
         assertTrue(output.contains("Created task #1"));
         assertTrue(output.contains("Publish release"));
+        assertTrue(output.contains("Choose an action:\nTitle:"));
         assertTrue(output.contains("Status updated"));
         assertTrue(output.contains("Completion: 100.0%"));
         assertTrue(output.contains("ARCHIVE (1)"));
@@ -75,12 +76,29 @@ class ConsoleApplicationTest {
         assertTrue(output.contains("See you!"));
     }
 
+    @Test
+    void emptyCommandIsIgnoredAndBackCancelsCurrentAction() {
+        String commands = """
+
+                1
+                back
+                2
+                0
+                """;
+
+        String output = runApplication(commands);
+
+        assertTrue(output.contains("Back to main menu."));
+        assertTrue(output.contains("ACTIVE TASKS (0)"));
+        org.junit.jupiter.api.Assertions.assertFalse(output.contains("Unknown command"));
+    }
+
     private String runApplication(String commands) {
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
         TaskService service = new TaskService(new InMemoryTaskRepository(), CLOCK);
         new ConsoleApplication(service,
                 new ByteArrayInputStream(commands.getBytes(StandardCharsets.UTF_8)),
                 new PrintStream(bytes, true, StandardCharsets.UTF_8)).run();
-        return bytes.toString(StandardCharsets.UTF_8);
+        return bytes.toString(StandardCharsets.UTF_8).replace("\r", "");
     }
 }

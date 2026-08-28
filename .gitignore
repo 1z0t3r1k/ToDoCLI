@@ -40,6 +40,7 @@ build/
 
 .idea/
 target/
+data/
 *.iml
 build/
 .gradle/

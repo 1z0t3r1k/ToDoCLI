@@ -27,11 +27,21 @@ public final class ConsoleApplication {
     public void run() {
         output.println("ToDoCLI - plan clearly, finish consistently");
         boolean running = true;
-        while (running && input.hasNextLine()) {
+        while (running) {
             printMenu();
-            String command = prompt("Choose: ");
+            String command = readLine("Choose an action:");
+            if (command == null) {
+                break;
+            }
+            if (command.isBlank()) {
+                continue;
+            }
             try {
                 running = execute(command);
+            } catch (EndOfInputException exception) {
+                running = false;
+            } catch (BackRequestedException exception) {
+                output.println("Back to main menu.");
             } catch (IllegalArgumentException | IllegalStateException exception) {
                 output.println("! " + exception.getMessage());
             }
@@ -63,7 +73,7 @@ public final class ConsoleApplication {
     private void createTask() {
         String name = promptRequired("Title: ");
         if (service.existsByExactName(name)
-                && !prompt("A task with this title exists. Create another? [y/N]: ")
+                && !prompt("A task with this title exists. Create another? [y/N]")
                 .equalsIgnoreCase("y")) {
             output.println("Cancelled.");
             return;
@@ -90,7 +100,7 @@ public final class ConsoleApplication {
 
     private void editTags() {
         int id = readId();
-        String action = prompt("Add or remove? [a/r]: ").toLowerCase(Locale.ROOT);
+        String action = prompt("Add or remove? [a/r]").toLowerCase(Locale.ROOT);
         String tag = promptRequired("Tag: ");
         if (action.equals("a")) service.addTag(id, tag);
         else if (action.equals("r")) service.removeTag(id, tag);
@@ -101,9 +111,9 @@ public final class ConsoleApplication {
     private void editTask() {
         int id = readId();
         Task task = service.getTaskById(id);
-        String name = prompt("Title [" + task.getName() + "]: ");
-        String description = prompt("Description [" + task.getDescription() + "]: ");
-        String deadline = prompt("Deadline [yyyy-MM-dd, '-' to clear, Enter to keep]: ");
+        String name = prompt("Title [" + task.getName() + "]:");
+        String description = prompt("Description [" + task.getDescription() + "]:");
+        String deadline = prompt("Deadline [yyyy-MM-dd, '-' to clear, Enter to keep]:");
         if (!name.isBlank()) service.renameTask(id, name);
         if (!description.isBlank()) service.changeTaskDescription(id, description);
         if (deadline.equals("-")) service.changeDeadline(id, null);
@@ -114,7 +124,7 @@ public final class ConsoleApplication {
     private void deleteTask() {
         int id = readId();
         Task task = service.getTaskById(id);
-        if (prompt("Delete '" + task.getName() + "'? [y/N]: ").equalsIgnoreCase("y")) {
+        if (prompt("Delete '" + task.getName() + "'? [y/N]").equalsIgnoreCase("y")) {
             service.deleteTaskById(id);
             output.println("Deleted.");
         } else output.println("Cancelled.");
@@ -150,7 +160,10 @@ public final class ConsoleApplication {
                 7 Set priority   8 Edit tags       9 Edit task
                10 Delete        11 Archive done   12 View archive
                13 Dashboard      0 Exit
+
+                Type 'back' at any prompt to return to this menu.
                 """);
+        output.flush();
     }
 
     private int readId() {
@@ -195,7 +208,25 @@ public final class ConsoleApplication {
     }
 
     private String prompt(String label) {
-        output.print(label);
-        return input.hasNextLine() ? input.nextLine().trim() : "";
+        String value = readLine(label);
+        if (value == null) {
+            throw new EndOfInputException();
+        }
+        if (value.equalsIgnoreCase("back") || value.equalsIgnoreCase("b")) {
+            throw new BackRequestedException();
+        }
+        return value;
+    }
+
+    private String readLine(String label) {
+        output.println(label.stripTrailing());
+        output.flush();
+        return input.hasNextLine() ? input.nextLine().trim() : null;
+    }
+
+    private static final class BackRequestedException extends RuntimeException {
+    }
+
+    private static final class EndOfInputException extends RuntimeException {
     }
 }

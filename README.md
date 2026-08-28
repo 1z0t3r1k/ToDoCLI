@@ -54,10 +54,6 @@ FileTaskRepository / InMemoryTaskRepository (adapters)
 
 Domain objects do not know about the terminal or filesystem. `TaskService` accepts a `Clock`, so date-sensitive behaviour is deterministic in tests. The file adapter writes a temporary file first and then replaces the storage file, reducing the chance of corruption after an interrupted write.
 
-## Technologies demonstrated
-
-Java 21, collections and streams, records, enums, `java.time`, NIO, exceptions, generics, JSON serialization, repository pattern, dependency injection without a framework, JUnit 5, Maven, and JaCoCo.
-
 ## License
 
 MIT — see [LICENSE](LICENSE).
